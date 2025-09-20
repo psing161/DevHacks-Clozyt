@@ -16,3 +16,4 @@ __pycache__/
 *.sqlite3-journal
 *.swp
 *.swo
+.node_modules
