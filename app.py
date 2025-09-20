@@ -5,9 +5,9 @@ from Models.basic_model import ProductStore, UserStore, Recommender
 
 app = Flask(__name__)
 
-# --- Load product data from all CSVs in Dataset/ ---
+# --- Load product data from all CSVs in Datasets/ ---
 def load_all_products():
-    dataset_dir = os.path.join(os.path.dirname(__file__), 'Dataset')
+    dataset_dir = os.path.join(os.path.dirname(__file__), 'Datasets')
     products = []
     for fname in os.listdir(dataset_dir):
         if fname.endswith('.csv'):
