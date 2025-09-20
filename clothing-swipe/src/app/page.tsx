@@ -1,106 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useOutfits, type Outfit } from "./context/OutfitContext";
 import SwipeCard from "./components/SwipeCard";
 
-const seed: Outfit[] = [
-  { id: "1", name: "Summer Dress", img: "https://placehold.co/600x800?text=Summer+Dress", type: "dress" },
-  { id: "2", name: "Winter Jacket", img: "https://placehold.co/600x800?text=Winter+Jacket", type: "jacket" },
-  { id: "3", name: "Casual Tee",   img: "https://placehold.co/600x800?text=Casual+Tee", type: "tshirt" },
-];
-
-const recommendations: Outfit[] = [
-  { id: "r1", name: "Floral Maxi Dress", img: "https://placehold.co/600x800?text=Floral+Maxi" },
-  { id: "r2", name: "Denim Jacket", img: "https://placehold.co/600x800?text=Denim+Jacket" },
-  { id: "r3", name: "Graphic Tee", img: "https://placehold.co/600x800?text=Graphic+Tee" },
-  { id: "r4", name: "Formal Blazer", img: "https://placehold.co/600x800?text=Blazer" },
-  { id: "r5", name: "Leather Boots", img: "https://placehold.co/600x800?text=Boots" },
-];
-
 export default function HomePage() {
   const { likeItem, dislikeItem } = useOutfits();
-  const [cards, setCards] = useState<Outfit[]>(seed);
+  const [cards, setCards] = useState<Outfit[]>([]);
+  const [recommendations, setRecommendations] = useState<Outfit[]>([]);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/recommendations");
+        const data = await res.json();
+
+        if (!Array.isArray(data)) {
+          console.error("API did not return an array", data);
+          return;
+        }
+
+        setCards(data);            // swipe deck
+        setRecommendations(data);  // recommended section
+      } catch (err) {
+        console.error("Failed to fetch recommendations", err);
+      }
+    }
+    fetchData();
+  }, []);
 
   const handleSwiped = (dir: "left" | "right", outfit: Outfit) => {
     if (dir === "right") likeItem(outfit);
     else dislikeItem(outfit);
+
     setCards((prev) => prev.filter((c) => c.id !== outfit.id));
   };
 
-  const clickDislike = () => {
-    const top = cards.at(-1);
-    if (!top) return;
-    dislikeItem(top);
-    setCards((p) => p.filter((c) => c.id !== top.id));
-  };
-
-  const clickLike = () => {
-    const top = cards.at(-1);
-    if (!top) return;
-    likeItem(top);
-    setCards((p) => p.filter((c) => c.id !== top.id));
-  };
-
   return (
-    <div className="flex flex-col items-center">
-      {/* Swipe Deck */}
-      <h2 className="text-2xl font-bold mb-2">Swipe Outfits</h2>
-      <p className="text-gray-500 text-sm mb-6">Drag → Like &nbsp;|&nbsp; Drag ← Dislike</p>
+    <main className="p-6">
+      <h1 className="text-2xl font-bold text-center">Swipe Outfits</h1>
+      <p className="text-center text-gray-600">Drag → Like | Drag ← Dislike</p>
 
-      <div className="relative w-[300px] h-[420px] mb-8">
+      {/* Swipeable cards */}
+      <div className="flex justify-center mt-8">
         {cards.length > 0 ? (
-          cards.map((outfit, index) => (
+          cards.map((outfit) => (
             <SwipeCard
               key={outfit.id}
               outfit={outfit}
-              index={index}
-              total={cards.length}
               onSwiped={handleSwiped}
             />
           ))
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-500 border-2 border-dashed rounded-xl">
-            No more outfits
-          </div>
+          <p className="text-gray-500">No more outfits to swipe!</p>
         )}
       </div>
 
-      {/* Buttons */}
-      <div className="flex gap-8 mb-12">
+      {/* Like/Dislike buttons */}
+      <div className="flex justify-center gap-6 mt-6">
         <button
-          onClick={clickDislike}
-          className="bg-red-500 text-white px-6 py-3 rounded-full text-lg shadow-lg hover:bg-red-600 transition"
+          onClick={() => cards[0] && handleSwiped("left", cards[0])}
+          className="bg-red-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-red-600"
         >
-          ❌
+          ❌ Dislike
         </button>
         <button
-          onClick={clickLike}
-          className="bg-green-500 text-white px-6 py-3 rounded-full text-lg shadow-lg hover:bg-green-600 transition"
+          onClick={() => cards[0] && handleSwiped("right", cards[0])}
+          className="bg-green-500 text-white px-6 py-3 rounded-full shadow-md hover:bg-green-600"
         >
-          ✅
+          ✅ Like
         </button>
       </div>
 
-      {/* Recommended Section */}
-      <section className="w-full max-w-5xl">
-        <h3 className="text-xl font-bold mb-4">Recommended for You</h3>
+      {/* Recommendations */}
+      <section className="mt-12">
+        <h2 className="text-xl font-semibold mb-4">Recommended for You</h2>
         <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {recommendations.map((item) => (
             <div
               key={item.id}
-              className="bg-white shadow rounded-xl p-3 flex flex-col items-center hover:shadow-lg transition"
+              className="w-40 p-2 border rounded shadow-sm text-center"
             >
               <img
-                src={item.img}
-                alt={item.name}
-                className="w-full h-48 object-cover rounded-md"
+                src={item.image_link}
+                alt={item.title}
+                className="w-full h-40 object-cover rounded"
               />
-              <p className="mt-2 font-medium">{item.name}</p>
+              <h3 className="text-sm mt-2 font-medium">{item.title}</h3>
+              {item.price && (
+                <p className="text-xs text-gray-600">${item.price}</p>
+              )}
             </div>
           ))}
         </div>
       </section>
-    </div>
+    </main>
   );
 }
