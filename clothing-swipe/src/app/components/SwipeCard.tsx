@@ -75,7 +75,7 @@ export default function SwipeCard({ outfit, onSwiped }: SwipeCardProps) {
 
         {/* Product image */}
         <img
-          src={outfit.image_link}
+          src={outfit.img}
           alt={outfit.title}
           className="w-full h-64 object-cover rounded"
         />
@@ -83,7 +83,7 @@ export default function SwipeCard({ outfit, onSwiped }: SwipeCardProps) {
         {/* Labels */}
         <div className="text-center">
           <h3 className="font-semibold">{outfit.title}</h3>
-          <p className="text-sm text-gray-500">{outfit.product_type}</p>
+          <p className="text-sm text-gray-500">{outfit.type}</p>
           {outfit.price && (
             <p className="text-sm text-gray-700">${outfit.price}</p>
           )}

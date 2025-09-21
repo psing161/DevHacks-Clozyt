@@ -1,21 +1,22 @@
 "use client";
+
 import { createContext, useContext, useState, ReactNode } from "react";
 
-// src/app/context/OutfitContext.tsx
 export type Outfit = {
   id: string;
   title: string;
-  image_link: string; // ✅ match CSV column name
+  img: string;
   price?: string;
-  product_type?: string;
+  type?: string;
 };
-
 
 type OutfitContextType = {
   liked: Outfit[];
   disliked: Outfit[];
-  likeItem: (item: Outfit) => void;
-  dislikeItem: (item: Outfit) => void;
+  likeItem: (outfit: Outfit) => void;
+  dislikeItem: (outfit: Outfit) => void;
+  removeFromLiked: (id: string) => void;
+  clearAll: () => void;
 };
 
 const OutfitContext = createContext<OutfitContextType | undefined>(undefined);
@@ -24,18 +25,42 @@ export function OutfitProvider({ children }: { children: ReactNode }) {
   const [liked, setLiked] = useState<Outfit[]>([]);
   const [disliked, setDisliked] = useState<Outfit[]>([]);
 
-  const likeItem = (item: Outfit) => setLiked((prev) => [...prev, item]);
-  const dislikeItem = (item: Outfit) => setDisliked((prev) => [...prev, item]);
+  const likeItem = (outfit: Outfit) => {
+    setLiked((prev) => {
+      if (prev.some((o) => o.id === outfit.id)) return prev; // avoid duplicates
+      return [...prev, outfit];
+    });
+  };
+
+  const dislikeItem = (outfit: Outfit) => {
+    setDisliked((prev) => {
+      if (prev.some((o) => o.id === outfit.id)) return prev;
+      return [...prev, outfit];
+    });
+  };
+
+  const removeFromLiked = (id: string) => {
+    setLiked((prev) => prev.filter((o) => o.id !== id));
+  };
+
+  const clearAll = () => {
+    setLiked([]);
+    setDisliked([]);
+  };
 
   return (
-    <OutfitContext.Provider value={{ liked, disliked, likeItem, dislikeItem }}>
+    <OutfitContext.Provider
+      value={{ liked, disliked, likeItem, dislikeItem, removeFromLiked, clearAll }}
+    >
       {children}
     </OutfitContext.Provider>
   );
 }
 
 export function useOutfits() {
-  const ctx = useContext(OutfitContext);
-  if (!ctx) throw new Error("useOutfits must be used within OutfitProvider");
-  return ctx;
+  const context = useContext(OutfitContext);
+  if (!context) {
+    throw new Error("useOutfits must be used within an OutfitProvider");
+  }
+  return context;
 }

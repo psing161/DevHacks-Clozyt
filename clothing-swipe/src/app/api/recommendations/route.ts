@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 // 🔗 Replace with your real API endpoint
-const DATA_API = "https://your-api-link-here.com/data";
+const DATA_API = "https://fakestoreapi.com/products";
 
 type Item = {
   id: string;
