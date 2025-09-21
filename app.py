@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import pandas as pd
 import os
 from Models.basic_model import ProductStore, UserStore, Recommender
+from Models.image_based_recommendation import recommend_from_image
 
 app = Flask(__name__)
 
@@ -30,7 +31,14 @@ def user_action():
     user_id = int(data['user_id'])
     product_id = int(data['product_id'])
     action = data.get('action', 'like')
+    image_url = data.get('image_url', '')
+
     recommender.update_user(user_id, product_id, action)
+    if image_url:
+        # If an image URL is provided, get image-based recommendations
+        img_recs = recommend_from_image(image_url, top_k=5)
+        return jsonify({'status': 'success', 'image_recommendations': img_recs[1:]})
+
     return jsonify({'status': 'success'})
 
 @app.route('/recommend', methods=['GET'])
