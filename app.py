@@ -3,7 +3,7 @@ import pandas as pd
 import os
 from Models.basic_model import ProductStore, UserStore, Recommender
 from Models.image_based_recommendation import recommend_from_image
-
+from Utilities.Products import read_products
 app = Flask(__name__)
 
 # --- Load product data from all CSVs in Datasets/ ---
@@ -47,6 +47,12 @@ def recommend():
     top_k = int(request.args.get('top_k', 5))
     recs = recommender.recommend(user_id, top_k)
     return jsonify({'recommendations': recs})
+
+@app.route('/allProducts', methods=['GET'])
+def products():
+    res = read_products()
+    return jsonify(res)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
