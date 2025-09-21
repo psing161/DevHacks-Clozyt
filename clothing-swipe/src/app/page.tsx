@@ -18,7 +18,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await fetch("/api/recommendations");
+        const res = await fetch("http://127.0.0.1:5000/user_action");
         const data = await res.json();
 
         // Ensure it's always an array

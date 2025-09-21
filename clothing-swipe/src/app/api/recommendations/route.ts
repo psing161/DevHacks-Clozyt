@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 // 🔗 Replace with your real API endpoint
-const DATA_API = "https://fakestoreapi.com/products";
+const DATA_API = "http://127.0.0.1:5000/allProducts";
 
 type Item = {
   id: string;
@@ -24,7 +24,7 @@ export async function GET() {
       (row: any, index: number) => ({
         id: row.id || `${index}`,
         title: row.title || row.Title || row.name || "Untitled",
-        img: row.img || row.image_link || row.Image_Link || "",
+        img: row.img || row.image_url || row.Image_Link || "",
         price: row.price || row.Price || "",
         type: row.type || row.product_type || row.Product_Type || "",
       })

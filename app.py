@@ -1,52 +1,41 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 import os
-from Models.basic_model import ProductStore, UserStore, Recommender
+
+from Models.user_feedback import add_liked_product
 from Models.image_based_recommendation import recommend_from_image
+from Models.nlp_recommender import NLPRecommender
+
 from Utilities.Products import read_products
 app = Flask(__name__)
 
-# --- Load product data from all CSVs in Datasets/ ---
-def load_all_products():
-    dataset_dir = os.path.join(os.path.dirname(__file__), 'Datasets')
-    products = []
-    for fname in os.listdir(dataset_dir):
-        if fname.endswith('.csv'):
-            df = pd.read_csv(os.path.join(dataset_dir, fname))
-            # Ensure each product has a unique id
-            for i, row in df.iterrows():
-                prod = row.to_dict()
-                prod['id'] = hash(f"{fname}_{i}") % (10**8)
-                products.append(prod)
-    return products
 
-products = load_all_products()
-product_store = ProductStore(products)
-user_store = UserStore()
-recommender = Recommender(product_store, user_store)
 
 @app.route('/user_action', methods=['POST'])
 def user_action():
     data = request.get_json()
     user_id = int(data['user_id'])
     product_id = int(data['product_id'])
+    product_description = data.get('product_description', f"Product {product_id}")
     action = data.get('action', 'like')
     image_url = data.get('image_url', '')
+    from Utilities.User import User
+    user = User(id=user_id, username="user" + str(user_id), email=None)
+    if action == 'like':
+        user.update_likes(product_id, product_description)
+        # Also update in user feedback
+    else:
+        user.update_dislikes(product_id, product_description)
+        # Also update in user feedback
 
-    recommender.update_user(user_id, product_id, action)
     if image_url:
         # If an image URL is provided, get image-based recommendations
         img_recs = recommend_from_image(image_url, top_k=5)
-        return jsonify({'status': 'success', 'image_recommendations': img_recs[1:]})
+        nlp_recommender = NLPRecommender()
+        nlp_recs = nlp_recommender.nlp_recommend(product_description, top_k=5, user_id=user_id)
+        return jsonify({'status': 'success', 'image_recommendations': img_recs[1:]+nlp_recs})
 
     return jsonify({'status': 'success'})
-
-@app.route('/recommend', methods=['GET'])
-def recommend():
-    user_id = int(request.args.get('user_id'))
-    top_k = int(request.args.get('top_k', 5))
-    recs = recommender.recommend(user_id, top_k)
-    return jsonify({'recommendations': recs})
 
 @app.route('/allProducts', methods=['GET'])
 def products():

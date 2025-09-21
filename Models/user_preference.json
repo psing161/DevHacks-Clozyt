@@ -1,0 +1,19 @@
+{
+  "user_dislikes": [
+    {
+      "user_id": 1,
+      "disliked_items": [],
+      "probable_dislike_categories": []
+    },
+    {
+      "user_id": 2,
+      "disliked_items": [],
+      "probable_dislike_categories": []
+    },
+    {
+      "user_id": 3,
+      "disliked_items": [],
+      "probable_dislike_categories": []
+    }
+  ]
+}
